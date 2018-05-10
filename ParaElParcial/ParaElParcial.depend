@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1524347212 source:c:\users\sebas\desktop\paraelparcial\main.c
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+
