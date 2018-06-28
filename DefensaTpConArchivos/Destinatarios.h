@@ -28,10 +28,12 @@ int comparar_Destinatarios(void* , void* );
 
 int mostrar_lista_Destinatarios(ArrayList* );
 
-int cargar_Destinatarios(ArrayList*, FILE*, char*);
+int leer_Archivo(ArrayList* , eDestinatario* ,FILE* , char* );
+
+int cargar_Destinatario(ArrayList* , eDestinatario*  ,char* ,char* , int );
 
 int lista_Destinatarios_atendidos (ArrayList* , ArrayList* );
 
-int depurar_Destinatarios(ArrayList*, ArrayList*, ArrayList*, FILE*);
+int depurar_Destinatarios(ArrayList*,eDestinatario* ,ArrayList*, eDestinatario* ,ArrayList*, FILE*);
 
 #endif // DESTINATARIOS_H_INCLUDED

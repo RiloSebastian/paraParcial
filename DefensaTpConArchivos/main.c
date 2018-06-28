@@ -12,9 +12,11 @@ char email[40];
 
 FILE* black_list;
 char* blackListPath="black_list.csv";
+eDestinatario* destinatarioListaNegra;
 
 FILE* archivo_destinatarios;
 char* destinatariosPath="destinatarios.csv";
+eDestinatario* destinatarioTotal;
 
 FILE* destinatariosDepurados;
 
@@ -44,13 +46,13 @@ do
      switch(opcion)
         {
         case 1:
-            index=cargar_Destinatario(TotalDestinatarios,archivo_destinatarios, destinatariosPath);
+            index=leer_Archivo(TotalDestinatarios,destinatarioTotal,archivo_destinatarios, destinatariosPath);
             break;
         case 2:
-            index=cargar_Destinatario(ListaNegraDestinatarios, black_list, blackListPath);
+            index=leer_Archivo(ListaNegraDestinatarios,destinatarioListaNegra,black_list, blackListPath);
             break;
         case 3:
-            index=depurar_Destinatarios(TotalDestinatarios,ListaNegraDestinatarios, DestinatariosDepurados ,destinatariosDepurados);
+            index=depurar_Destinatarios(TotalDestinatarios,destinatarioTotal,ListaNegraDestinatarios,destinatarioListaNegra,DestinatariosDepurados ,destinatariosDepurados);
             break;
         case 4:
             break;

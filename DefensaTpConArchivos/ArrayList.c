@@ -28,33 +28,33 @@ ArrayList* al_newArrayList(void)
 
     if(this != NULL)
     {
-        pElementsaux =(void **) malloc(sizeof(void *)*AL_INITIAL_VALUE );
+        pElementsaux =(void **) malloc(sizeof(void *)*AL_INITIAL_VALUE );//pido memoria para el puntero a un puntero. memoria multiplicada por una variable definida
         if(pElementsaux != NULL)
         {
             this->size=0;
-            this->pElements=pElementsaux;
-            this->reservedSize=AL_INITIAL_VALUE;
-            this->add=al_add;
-            this->len=al_len;
-            this->set=al_set;
-            this->remove=al_remove;
-            this->clear=al_clear;
-            this->clone=al_clone;
-            this->get=al_get;
-            this->contains=al_contains;
-            this->push=al_push;
-            this->indexOf=al_indexOf;
-            this->isEmpty=al_isEmpty;
-            this->pop=al_pop;
-            this->subList=al_subList;
-            this->containsAll=al_containsAll;
-            this->deleteArrayList = al_deleteArrayList;
+            this->pElements=pElementsaux;//se le pasa el puntero al campo de la lista de elementos de array list
+            this->reservedSize=AL_INITIAL_VALUE;//le asigno el valor inicial del tamaño de la memoria al campo de arraylist
+            this->add=al_add;//le asigno la direccion de memoria de la funcion
+            this->len=al_len; // '''''''''''''''''''''''''''''''''''''''''''
+            this->set=al_set;// '''''''''''''''''''''''''''''''''''''''''''
+            this->remove=al_remove;// '''''''''''''''''''''''''''''''''''''''''''
+            this->clear=al_clear;// '''''''''''''''''''''''''''''''''''''''''''
+            this->clone=al_clone;// '''''''''''''''''''''''''''''''''''''''''''
+            this->get=al_get;// '''''''''''''''''''''''''''''''''''''''''''
+            this->contains=al_contains;// '''''''''''''''''''''''''''''''''''''''''''
+            this->push=al_push;// '''''''''''''''''''''''''''''''''''''''''''
+            this->indexOf=al_indexOf;// '''''''''''''''''''''''''''''''''''''''''''
+            this->isEmpty=al_isEmpty;// '''''''''''''''''''''''''''''''''''''''''''
+            this->pop=al_pop;// '''''''''''''''''''''''''''''''''''''''''''
+            this->subList=al_subList;// '''''''''''''''''''''''''''''''''''''''''''
+            this->containsAll=al_containsAll;// '''''''''''''''''''''''''''''''''''''''''''
+            this->deleteArrayList = al_deleteArrayList;// '''''''''''''''''''''''''''''''''''''''''''
             this->sort = al_sort;
             returnAux = this;
         }
         else
         {
-            free(this);
+            free(this);// en caso de que no encuentre espacio en memoria para el doble puntero. lo destruyo
         }
     }
 
@@ -107,7 +107,7 @@ int al_deleteArrayList(ArrayList* this){
 int returnAux = -1;
 
  if(this !=NULL){
-  free(this->pElements);
+  al_clear(this);
   free(this);
   returnAux= 0;
  }
@@ -212,14 +212,10 @@ return returnAux;
  */
 int al_remove(ArrayList* this,int index){
 int returnAux = -1;
-int j;
 
- if(this!= NULL && index>=0 && index<= this->size){
+ if(this!= NULL && index>=0 && index<= al_len(this)){
 
-  for(j=index+1; j< this->size; j++){
-   *(this->pElements+(j-1)) = *(this->pElements+j);
-  }
-  this->size--;
+  contract(this,index);
   returnAux=0;
  }
 
@@ -234,19 +230,22 @@ return returnAux;
  *                  - ( 0) if Ok
  */
 int al_clear(ArrayList* this){
-int returnAux = -1;
-int i;
+ int returnAux = -1;
+    void** aux;
+    if(this!=NULL)
 
- if(this!=NULL){
+    {
+        this->size=0;
+        aux=(void**)realloc(this->pElements, sizeof(void*)*(AL_INCREMENT));
+        if(aux != NULL)
+      {
+         this->pElements = aux;
+         this->reservedSize=AL_INCREMENT;
+         returnAux = 0;
+      }
+    }
 
-  for(i=0; i< this->size;i++){
-   free(*(this->pElements+i));
-  }
-  this->size=0;
-  returnAux=0;
- }
-
-return returnAux;
+    return returnAux;
 }
 
 
@@ -288,16 +287,13 @@ return returnAux;
  */
 int al_push(ArrayList* this, int index, void* pElement){
 int returnAux = -1;
-int i;
 
  if(this!= NULL && pElement != NULL && index>=0 && index <= al_len(this)){
   al_add(this, pElement);
 
   if(index != al_len(this)){
 
-   for(i=this->size-1; i>=index; i--){
-    *(this->pElements+i) = *(this->pElements+(i-1));
-   }
+   expand(this,index);
    al_set(this,index,pElement);
   }
   returnAux=0;
@@ -341,9 +337,10 @@ int al_isEmpty(ArrayList* this){
 int returnAux = -1;
 
  if(this!=NULL){
+
   returnAux=1;
 
-  if(this->size > 0){
+  if(al_len(this) > 0){
    returnAux=0;
   }
  }
@@ -390,7 +387,7 @@ int i;
  if(this != NULL){
   this2=al_newArrayList();
 
-  if(this2!=NULL && from>=0 && from < to && to> from && to <= al_len(this) ){
+  if(this2!=NULL && from>=0 && to>= 0 && from < to && from <= (this->len(this)) && to <= al_len(this) ){
 
    for(i=from;i < to; i++){
     al_add(this2,*(this->pElements+i));
@@ -418,17 +415,19 @@ int i;
 
  if(this!= NULL && this2!= NULL){
 
-  for(i=0;i< this->size;i++){
+  if(this2->len(this2)==this->len(this)){
+
+   for(i=0;i< al_len(this);i++){
 
    if(*(this->pElements+i) == *(this2->pElements+i)){
-    returnAux=1;
+        returnAux=1;
    }
    else{
     returnAux=0;
+    }
    }
   }
  }
-
 return returnAux;
 }
 
@@ -503,7 +502,8 @@ void** pAux;
   pAux= (void**) realloc(this,sizeof(void*)*(this->reservedSize+AL_INCREMENT));
 
   if(pAux!=NULL){
-   this->reservedSize= this->reservedSize + AL_INCREMENT;
+    this->pElements = pAux;
+   this->reservedSize = (this->reservedSize + AL_INCREMENT);
    returnAux=0;
   }
  }
@@ -521,17 +521,13 @@ int expand(ArrayList* this,int index){
 int returnAux = -1;
 int flag;
 int i;
-int j;
 
  if(this!= NULL && index>= 0 && index <= al_len(this)){
 
-  if(index != al_len(this)){
-
-   for(j=0;j<AL_INCREMENT;i++){
-    al_add(this,*(this->pElements+index));
+  if(index < al_len(this)){
 
     for(i=this->size-1; i>=index; i--){
-     *(this->pElements+i) = *(this->pElements+(i-1));
+     *(this->pElements+i) = *(this->pElements+i);
    }
   }
   returnAux=0;
@@ -543,7 +539,7 @@ int j;
     returnAux=0;
   }
  }
- }
+
 return returnAux;
 }
 
@@ -561,11 +557,12 @@ int i;
 
  if(this!= NULL && index>= 0 && index < al_len(this)){
 
-  for(i=this->size-1; i>index ; i--){
-    al_remove(this,i);
-  }
+  for(i=index; i>al_len(this) ; i--){
+  *(this->pElements+i)=*(this->pElements+(i+1));
   returnAux=0;
  }
+  this->size--;
+}
 
 return returnAux;
 }

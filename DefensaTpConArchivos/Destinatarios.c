@@ -19,7 +19,7 @@ int set_estado(eDestinatario* this , int estado)
 {
 int index=-1;
 
-    if(this != NULL && estado > 0)
+    if(this != NULL && estado >= 0)
     {
      this->Estado = estado;
      index=0;
@@ -97,21 +97,24 @@ int index=-1;
 
     if(this != NULL)
     {
-        printf(" ESTADO: %d ---- EMAIL: %s \n", get_estado(this), get_email(this));
+        printf(" NOMBRE: %s ---- EMAIL: %s ---- ESTADO:%d \n", get_nombre(this), get_email(this), get_estado(this));
         index=0;
     }
 return index;
 }
 
 
-int comparar_Destinatarios(void* destinatarioA,void* destinatarioB)
+int comparar_Destinatarios(void* destinatarioA, void* destinatarioB)
 {
 eDestinatario* destinatario1;
 eDestinatario* destinatario2;
 
 destinatario1= (eDestinatario*) destinatarioA;
 destinatario2= (eDestinatario*) destinatarioB;
-
+/*
+printf("destinatario j: nom: %s -- mail: %s\n",destinatario1->nombre, destinatario1->email);
+printf("destinatario i: nom: %s -- mail: %s\n",destinatario2->nombre, destinatario2->email);
+system("pause");*/
 return strcmp(destinatario1->email, destinatario2->email);
 }
 
@@ -129,6 +132,7 @@ eDestinatario* destinatarioActual;
         for(i=0; i<len;i++)
         {
             destinatarioActual= (eDestinatario*) listado->get(listado, i);
+            printf("%d.",i+1);
             mostrar_Destinatarios(destinatarioActual);
         }
     index=0;
@@ -136,10 +140,8 @@ eDestinatario* destinatarioActual;
 return index;
 }
 
-
-int cargar_Destinatario(ArrayList* listado, FILE* archivo, char* direcc)
+int leer_Archivo(ArrayList* listado,eDestinatario* destinatarioActual ,FILE* archivo, char* direcc)
 {
-eDestinatario* destinatarioActual;
 int index=-1;
 char linea[60];
 char nombre[20];
@@ -151,39 +153,49 @@ memset(linea, '\0',60);
 
     if(listado != NULL && email != NULL)
     {
-        destinatarioActual = new_Destinatario();
-
         archivo=fopen(direcc,"r");
         if(archivo != NULL)
             {
                 fgets(linea, 60, archivo);
+
                 while(!feof(archivo))
                 {
-
-                    strcpy(destinatarioActual->nombre,strtok(linea,","));
-                    strcpy(nombre,destinatarioActual->nombre);
-                    set_nombre(destinatarioActual, nombre);
-
-                    strcpy(destinatarioActual->email,strtok(NULL,"\n"));
-                    strcpy(email,destinatarioActual->email);
-                    set_email(destinatarioActual, email);
-
+                    strcpy(nombre,strtok(linea,","));
+                    strcpy(email,strtok(NULL,"\n"));
                     estado=0;
-                    set_estado(destinatarioActual,estado);
 
-                    listado->add(listado, destinatarioActual);
-
-                    printf(" NOMBRE: %s \n EMAIL: %s\n",destinatarioActual->nombre,destinatarioActual->email);
+                    cargar_Destinatario(listado,destinatarioActual,email,nombre,estado);
                     contar++;
-
                     memset(linea, '\0', 60);
                     fgets(linea, 60, archivo);
                 }
             fclose(archivo);
+
+
             printf("\n PERSONAS EN LA LISTA: %d \n", contar);
             }
         index=0;
     }
+
+return index;
+}
+
+
+int cargar_Destinatario(ArrayList* listado, eDestinatario* destinatarioActual ,char* email,char* nombre, int estado)
+{
+int index=-1;
+
+
+    if(listado != NULL && email != NULL)
+     {
+        destinatarioActual = new_Destinatario();
+        set_nombre(destinatarioActual, nombre);
+        set_email(destinatarioActual, email);
+        set_estado(destinatarioActual,estado);
+
+        listado->add(listado,destinatarioActual);
+        index=0;
+     }
 
 return index;
 }
@@ -204,45 +216,72 @@ eDestinatario* destinatarioActual;
 return index;
 }
 
-int depurar_Destinatarios(ArrayList* TotalDestinatarios, ArrayList* ListaNegraDestinatarios, ArrayList* DestinatariosDepurados, FILE* destinatariosDepurados)
+
+int depurar_Destinatarios(ArrayList* TotalDestinatarios,eDestinatario* destinatarioTotal ,ArrayList* ListaNegraDestinatarios,eDestinatario* destinatarioListaNegra ,ArrayList* DestinatariosDepurados, FILE* destinatariosDepurados)
 {
+FILE* archivo_destinatarios;
+ArrayList* aux;
+aux=al_newArrayList();
+char* destinatariosPath="destinatarios.csv";
 eDestinatario* depurados;
 int index=-1;
 char nombre[20];
 char email[40];
 int estado;
-int i;
+int i=0;
 int j;
+int k;
+
+aux=ListaNegraDestinatarios;
+
     if(TotalDestinatarios != NULL && ListaNegraDestinatarios != NULL && DestinatariosDepurados != NULL)
     {
-        depurados= new_Destinatario();
-        for(i=0; i<ListaNegraDestinatarios->len(ListaNegraDestinatarios);i++)
+        for(k=(ListaNegraDestinatarios->len(ListaNegraDestinatarios)); k<TotalDestinatarios->len(TotalDestinatarios);k++)
         {
-            for(j=0;i<TotalDestinatarios->len(TotalDestinatarios);j++ )
+            estado=-1;
+            strcpy(nombre,"--");
+            strcpy(email,"--");
+            cargar_Destinatario(ListaNegraDestinatarios,destinatarioListaNegra,email,nombre,estado);
+        }
+        fflush(stdin);
+        leer_Archivo(DestinatariosDepurados,depurados,archivo_destinatarios,destinatariosPath);
+
+
+        for(j=0; j<DestinatariosDepurados->len(DestinatariosDepurados);j++)
+        {
+
+            for(i=0; i<ListaNegraDestinatarios->len(ListaNegraDestinatarios);i++)
             {
-                if((index=comparar_Destinatarios(ListaNegraDestinatarios->pElements,TotalDestinatarios->pElements))==0)
+
+                fflush(stdin);
+                index=comparar_Destinatarios(*(DestinatariosDepurados->pElements+j),*(ListaNegraDestinatarios->pElements+i));
+                if(!index==0)
                 {
-                    depurados= (eDestinatario*) *(TotalDestinatarios->pElements+j);
-                    depurados->Estado=1;
+
+                    DestinatariosDepurados->remove(DestinatariosDepurados,j);
+                    ListaNegraDestinatarios->remove(ListaNegraDestinatarios,i);
                     break;
 
                 }
+                else if(i==(ListaNegraDestinatarios->len(ListaNegraDestinatarios)) && index!=0 )
+                 {
+
+                     DestinatariosDepurados->remove(DestinatariosDepurados,j);
+                 }
             }
-            set_estado(depurados,estado);
-            DestinatariosDepurados->add(DestinatariosDepurados,*(depurados+i));
+
         }
-        destinatariosDepurados=fopen("destinatarios_depurados.txt","w");
+        mostrar_lista_Destinatarios(DestinatariosDepurados);
+        printf("\n PERSONAS EN LA LISTA: %d \n", DestinatariosDepurados->len(DestinatariosDepurados));
+
+        /*destinatariosDepurados=fopen("destinatarios_depurados.txt","w");
             for(i=0;i<DestinatariosDepurados->len(DestinatariosDepurados);i++)
             {
-                if(depurados->Estado==0)
-                {
-                    fprintf(destinatariosDepurados,"%s,%s\n",*(depurados->nombre+i),*(depurados->email));
-                    printf("%s,%s",*(depurados->nombre+i),*(depurados->email));
-                }
+
             }
             fclose(destinatariosDepurados);
-            index=0;
-
+*/
+index=0;
     }
 
 return index;
